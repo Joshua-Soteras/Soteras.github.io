@@ -64,6 +64,11 @@ body {
   animation: flicker 0.15s infinite;
 }
 
+/* Glitch text-shadow — used as group-hover:glitch-text via @utility */
+@utility glitch-text {
+  text-shadow: 2px 0 #ff0000, -2px 0 #00ffff;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

@@ -5,7 +5,9 @@ import BootSequence from '@/components/BootSequence';
 import Navigation from '@/components/Navigation';
 import Portfolio from '@/components/Portfolio';
 import TerminalContact from '@/components/TerminalContact';
+import GlitchReveal from '@/components/GlitchReveal';
 import { motion } from 'motion/react';
+import { GitBranch, Linkedin } from 'lucide-react';
 
 /**
  * Main Page Component
@@ -44,16 +46,27 @@ export default function Home() {
           {/* Contact Section with the Terminal Input */}
           <section id="contact" className="max-w-7xl mx-auto px-4 py-24 border-t border-foreground/5">
             <div className="text-center space-y-4 mb-12">
-              <h2 className="text-sm font-mono text-foreground/50 uppercase tracking-[0.3em]">
+              <GlitchReveal as="h2" className="text-sm font-mono text-foreground/50 uppercase tracking-[0.3em]">
                 {"// TERMINAL"}
-              </h2>
-              <h3 className="text-4xl font-bold tracking-tighter">ESTABLISH_CONNECTION</h3>
-              <p className="text-foreground/60 max-w-md mx-auto text-sm">
+              </GlitchReveal>
+              <GlitchReveal as="h3" className="text-4xl font-bold tracking-tighter">
+                ESTABLISH_CONNECTION
+              </GlitchReveal>
+              <GlitchReveal as="p" className="text-foreground/60 max-w-md mx-auto text-sm">
                 Execute commands in the terminal below to reach out or explore my digital footprint.
-              </p>
+              </GlitchReveal>
             </div>
             
             <TerminalContact />
+
+            <div className="flex justify-center gap-6 mt-8">
+              <a href="https://github.com/Joshua-Soteras" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="hover:text-foreground/60 transition-colors">
+                <GitBranch className="w-6 h-6" />
+              </a>
+              <a href="https://www.linkedin.com/in/joshua-soteras/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-foreground/60 transition-colors">
+                <Linkedin className="w-6 h-6" />
+              </a>
+            </div>
           </section>
 
           {/* Footer */}

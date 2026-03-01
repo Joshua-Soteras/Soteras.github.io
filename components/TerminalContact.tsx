@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
 
 /**
  * TerminalContact Component
@@ -13,7 +12,6 @@ export default function TerminalContact() {
     'Welcome to the Terminal Contact System.',
     'Type "help" for available commands.',
   ]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -85,7 +83,6 @@ export default function TerminalContact() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             className="bg-transparent border-none outline-none flex-1 text-green-400"
-            autoFocus
           />
         </form>
       </div>

@@ -43,6 +43,10 @@ body {
   animation: glitch 0.2s infinite;
 }
 
+.animate-glitch-slow {
+  animation: glitch 1.4s infinite;
+}
+
 .hover-glitch:hover {
   animation: glitch 0.1s infinite, glitch-skew 0.1s infinite;
   text-shadow: 2px 0 #ff0000, -2px 0 #00ffff;
@@ -99,6 +103,28 @@ body {
 .animate-corner-spin {
   animation: corner-spin 0.6s ease-out forwards;
 }
+
+/* ── VictusCard ────────────────────────────────────────────────────────────── */
+@keyframes scan-line {
+  0%   { top: -2px; opacity: 0;   }
+  5%   {            opacity: 0.6; }
+  95%  {            opacity: 0.2; }
+  100% { top: 100%; opacity: 0;   }
+}
+.animate-scan-line { animation: scan-line 3.5s linear infinite; }
+
+@keyframes victus-border {
+  0%,  100% { border-color: rgba(255,255,255,0.25); }
+  18%        { border-color: rgba(255,0,55,0.55);   }
+  19%        { border-color: rgba(255,255,255,0.10); }
+  20%        { border-color: rgba(255,255,255,0.25); }
+  48%        { border-color: rgba(0,255,255,0.45);   }
+  50%        { border-color: rgba(255,255,255,0.05); }
+  51%        { border-color: rgba(255,255,255,0.25); }
+  76%        { border-color: rgba(255,255,255,0.05); }
+  77%        { border-color: rgba(255,255,255,0.25); }
+}
+.animate-victus-border { animation: victus-border 5s ease-in-out infinite; }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {

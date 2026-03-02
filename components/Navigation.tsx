@@ -21,9 +21,9 @@ export default function Navigation() {
 
   const tabs = [
     { name: 'ABOUT', id: 'about' },
-    { name: 'CHECKPOINTS', id: 'projects' },
-    { name: 'LOGS', id: 'experience' },
-    { name: 'TERMINAL', id: 'contact' },
+    { name: 'PROJECT_LOGS', id: 'projects' },
+    { name: 'EXPERIENCE', id: 'experience' },
+    { name: 'CONTACT', id: 'contact' },
   ];
 
   if (!mounted) return null;
@@ -34,7 +34,7 @@ export default function Navigation() {
         {/* Logo / Brand */}
         <div className="flex items-center gap-2 font-bold tracking-tighter">
           <Terminal className="w-5 h-5" />
-          <span className="hidden sm:inline">DEV_OS // PORTFOLIO</span>
+          <span className="hidden sm:inline">soteras.dev</span>
         </div>
 
         {/* Tabs & Theme Toggle */}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Outer dashed orbit -->
+  <circle cx="50" cy="50" r="44" stroke-width="1.5" stroke-dasharray="6 3" opacity="0.5"/>
+  <!-- Inner solid ring -->
+  <circle cx="50" cy="50" r="28" stroke-width="2"/>
+  <!-- Cross hairs -->
+  <line x1="50" y1="4"  x2="50" y2="20" stroke-width="1.5"/>
+  <line x1="50" y1="80" x2="50" y2="96" stroke-width="1.5"/>
+  <line x1="4"  y1="50" x2="20" y2="50" stroke-width="1.5"/>
+  <line x1="80" y1="50" x2="96" y2="50" stroke-width="1.5"/>
+  <!-- Question mark -->
+  <text x="50" y="60" text-anchor="middle" font-size="26" font-family="monospace" fill="currentColor" stroke="none" font-weight="700">?</text>
+</svg>

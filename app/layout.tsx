@@ -11,7 +11,7 @@ const firaCode = Fira_Code({
 });
 
 export const metadata: Metadata = {
-  title: 'Soteras.dev',
+  title: 'soteras.dev',
   description: 'A glitchy, CRT-inspired software engineer portfolio.',
 };
 

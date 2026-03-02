@@ -8,6 +8,7 @@ import TerminalContact from '@/components/TerminalContact';
 import GlitchReveal from '@/components/GlitchReveal';
 import { motion } from 'motion/react';
 import { GitBranch, Linkedin } from 'lucide-react';
+import GlitchBorder from '@/components/GlitchBorder';
 
 /**
  * Main Page Component
@@ -59,13 +60,17 @@ export default function Home() {
             
             <TerminalContact />
 
-            <div className="flex justify-center gap-6 mt-8">
-              <a href="https://github.com/Joshua-Soteras" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="hover:text-foreground/60 transition-colors">
-                <GitBranch className="w-6 h-6" />
-              </a>
-              <a href="https://www.linkedin.com/in/joshua-soteras/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-foreground/60 transition-colors">
-                <Linkedin className="w-6 h-6" />
-              </a>
+            <div className="flex justify-center gap-8 mt-8">
+              <GlitchBorder size="sm">
+                <a href="https://github.com/Joshua-Soteras" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="block p-1 hover:text-foreground/60 transition-colors">
+                  <GitBranch className="w-6 h-6" />
+                </a>
+              </GlitchBorder>
+              <GlitchBorder size="sm">
+                <a href="https://www.linkedin.com/in/joshua-soteras/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="block p-1 hover:text-foreground/60 transition-colors">
+                  <Linkedin className="w-6 h-6" />
+                </a>
+              </GlitchBorder>
             </div>
           </section>
 

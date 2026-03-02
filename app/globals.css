@@ -69,6 +69,37 @@ body {
   text-shadow: 2px 0 #ff0000, -2px 0 #00ffff;
 }
 
+/* ── GlitchBorder: hover pulsate ──────────────────────────────────────────── */
+@keyframes border-flicker {
+  0%, 100% { opacity: 1; }
+  20%      { opacity: 0.12; }
+  40%      { opacity: 0.9; }
+  55%      { opacity: 0.04; }
+  70%      { opacity: 0.85; }
+  85%      { opacity: 0.3; }
+}
+
+.animate-border-flicker {
+  animation: border-flicker 0.7s ease-in-out infinite;
+}
+
+/* ── GlitchBorder: click spin + blink ─────────────────────────────────────── */
+@keyframes corner-spin {
+  0%   { transform: rotate(0deg);   opacity: 1;    }
+  12%  {                             opacity: 0.04; }
+  25%  { transform: rotate(90deg);  opacity: 0.9;  }
+  37%  {                             opacity: 0.04; }
+  50%  { transform: rotate(180deg); opacity: 1;    }
+  62%  {                             opacity: 0.04; }
+  75%  { transform: rotate(270deg); opacity: 0.9;  }
+  87%  {                             opacity: 0.04; }
+  100% { transform: rotate(360deg); opacity: 1;    }
+}
+
+.animate-corner-spin {
+  animation: corner-spin 0.6s ease-out forwards;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

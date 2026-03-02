@@ -4,6 +4,7 @@ import { useTheme } from 'next-themes';
 import { Sun, Moon, Terminal } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
+import GlitchBorder from './GlitchBorder';
 
 /**
  * Navigation Component
@@ -40,15 +41,16 @@ export default function Navigation() {
         <div className="flex items-center gap-4 sm:gap-8">
           <div className="flex gap-4 sm:gap-6">
             {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  document.getElementById(tab.id)?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="text-xs font-bold hover:text-foreground/60 transition-colors hover-glitch"
-              >
-                [{tab.name}]
-              </button>
+              <GlitchBorder key={tab.id} size="sm">
+                <button
+                  onClick={() => {
+                    document.getElementById(tab.id)?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="text-xs font-bold hover:text-foreground/60 transition-colors hover-glitch"
+                >
+                  [{tab.name}]
+                </button>
+              </GlitchBorder>
             ))}
           </div>
 

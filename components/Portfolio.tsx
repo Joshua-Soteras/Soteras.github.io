@@ -4,131 +4,68 @@ import { motion } from 'motion/react';
 import { ExternalLink, GitBranch, Linkedin } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import GlitchReveal from './GlitchReveal';
+import GlitchBorder from './GlitchBorder';
 
-// ─── Name animation constants ────────────────────────────────────────────────
-const NAME_L1 = 'JOSHUA';
-const NAME_L2 = 'SOTERAS';
+// ─── Name glitch-cycle constants ─────────────────────────────────────────────
+const PHRASES = [
+  { l1: 'JOSHUA JOAL', l2: 'SOTERAS'      },
+  { l1: 'KING OF',     l2: 'ADAPTABILITY' },
+] as const;
 
-// Binary encoding — lower 2 bits of each letter's ASCII value, space-separated.
-// Same character length as the names' hex equivalents so the container doesn't shift.
-// J=10 O=11 S=11 H=00 U=01 A=01
-const BIN_L1 = '10 11 11 00 01 01';    // 17 chars
-// S=11 O=11 T=00 E=01 R=10 A=01 S=11
-const BIN_L2 = '11 11 00 01 10 01 11'; // 20 chars
+const GLITCH_CHARS    = '!<>-_\\/[]{}—=+*^?#$@%&';
+const HOLD_MS         = 2500; // time each phrase is visible
+const SCRAMBLE_FRAMES = 10;   // number of scramble frames
+const FRAME_MS        = 40;   // ms per scramble frame (~400ms total)
 
-const BACKSPACE_NAME_MS = 50;
-const TYPE_BIN_MS       = 80;
-const BACKSPACE_BIN_MS  = 40;
-const TYPE_NAME_MS      = 80;
-const BIN_PAUSE_MS      = 800;
-
-// Bar fills over the duration of the longer binary line
-const BAR_DURATION_MS = BIN_L2.length * TYPE_BIN_MS; // 20 × 80 = 1600ms
+const scramble = (s: string) =>
+  s.split('').map(c => (c === ' ' ? ' ' : GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)])).join('');
 
 // ─── AnimatedName ─────────────────────────────────────────────────────────────
 function AnimatedName() {
-  const [l1, setL1] = useState(NAME_L1);
-  const [l2, setL2] = useState(NAME_L2);
-  const [showBar, setShowBar] = useState(false);
-  const [barProgress, setBarProgress] = useState(0);
+  const [l1, setL1] = useState<string>(PHRASES[0].l1);
+  const [l2, setL2] = useState<string>(PHRASES[0].l2);
 
   useEffect(() => {
-    let ivId: ReturnType<typeof setInterval> | null = null;
-    let tId:  ReturnType<typeof setTimeout>  | null = null;
+    let holdId: ReturnType<typeof setTimeout>  | null = null;
+    let ivId:   ReturnType<typeof setInterval> | null = null;
+    let currentIdx = 0;
 
-    const clear = () => {
-      if (ivId) { clearInterval(ivId); ivId = null; }
-      if (tId)  { clearTimeout(tId);   tId  = null; }
-    };
-
-    // ── helpers ──────────────────────────────────────────────────────────────
-    const backspaceBoth = (
-      s1: string, s2: string,
-      speed: number,
-      onDone: () => void
-    ) => {
-      let i1 = s1.length, i2 = s2.length;
-      ivId = setInterval(() => {
-        if (i1 > 0) setL1(s1.slice(0, --i1));
-        if (i2 > 0) setL2(s2.slice(0, --i2));
-        if (i1 === 0 && i2 === 0) { clearInterval(ivId!); ivId = null; onDone(); }
-      }, speed);
-    };
-
-    const typeBoth = (
-      t1: string, t2: string,
-      speed: number,
-      onDone: () => void
-    ) => {
-      let j1 = 0, j2 = 0;
-      ivId = setInterval(() => {
-        if (j1 < t1.length) setL1(t1.slice(0, ++j1));
-        if (j2 < t2.length) setL2(t2.slice(0, ++j2));
-        if (j1 >= t1.length && j2 >= t2.length) { clearInterval(ivId!); ivId = null; onDone(); }
-      }, speed);
-    };
-
-    // ── cycle ─────────────────────────────────────────────────────────────────
     const runCycle = () => {
-      // 1. Backspace real names
-      backspaceBoth(NAME_L1, NAME_L2, BACKSPACE_NAME_MS, () => {
+      const nextIdx = (currentIdx + 1) % PHRASES.length;
 
-        // 2. Type binary + start loading bar
-        setShowBar(true);
-        tId = setTimeout(() => setBarProgress(100), 50); // trigger CSS transition
+      setL1(PHRASES[currentIdx].l1);
+      setL2(PHRASES[currentIdx].l2);
 
-        typeBoth(BIN_L1, BIN_L2, TYPE_BIN_MS, () => {
-
-          // 3. Pause while full binary is shown
-          tId = setTimeout(() => {
-            setShowBar(false);
-            setBarProgress(0);
-
-            // 4. Backspace binary
-            backspaceBoth(BIN_L1, BIN_L2, BACKSPACE_BIN_MS, () => {
-
-              // 5. Retype names
-              typeBoth(NAME_L1, NAME_L2, TYPE_NAME_MS, () => {
-
-                // 6. Wait, then repeat
-                tId = setTimeout(runCycle, 2000 + Math.random() * 1000);
-              });
-            });
-          }, BIN_PAUSE_MS);
-        });
-      });
+      holdId = setTimeout(() => {
+        let frame = 0;
+        ivId = setInterval(() => {
+          frame++;
+          setL1(scramble(PHRASES[nextIdx].l1));
+          setL2(scramble(PHRASES[nextIdx].l2));
+          if (frame >= SCRAMBLE_FRAMES) {
+            clearInterval(ivId!);
+            ivId = null;
+            currentIdx = nextIdx;
+            runCycle();
+          }
+        }, FRAME_MS);
+      }, HOLD_MS);
     };
 
-    tId = setTimeout(runCycle, 2000 + Math.random() * 1000);
-    return clear;
+    runCycle();
+
+    return () => {
+      if (holdId) clearTimeout(holdId);
+      if (ivId)   clearInterval(ivId);
+    };
   }, []);
 
   return (
-    <div>
-      {/* overflow-hidden + whitespace-nowrap prevents binary text from wrapping
-          and changing the h1 height, which would cause layout shift */}
-      <h1 className="text-5xl md:text-7xl font-black tracking-tighter overflow-hidden whitespace-nowrap">
-        {l1 || '\u00A0'}
-        <br />
-        {l2 || '\u00A0'}
-      </h1>
-
-      {/* Always rendered so it doesn't add/remove height — opacity controls visibility */}
-      <div
-        className="mt-3 h-1 w-full max-w-sm bg-foreground/10 overflow-hidden relative"
-        style={{ opacity: showBar ? 1 : 0 }}
-      >
-        <div
-          className="h-full bg-foreground relative"
-          style={{
-            width: `${barProgress}%`,
-            transition: `width ${BAR_DURATION_MS}ms linear`,
-          }}
-        >
-          <div className="absolute inset-0 bg-foreground animate-glitch opacity-50" />
-        </div>
-      </div>
-    </div>
+    <h1 className="text-5xl md:text-7xl font-black tracking-tighter overflow-hidden whitespace-nowrap">
+      {l1 || '\u00A0'}
+      <br />
+      {l2 || '\u00A0'}
+    </h1>
   );
 }
 
@@ -224,33 +161,63 @@ export default function Portfolio() {
           <div className="space-y-2">
             {/* Static label — about section is the landing view, no scroll trigger needed */}
             <h2 className="text-sm font-mono text-foreground/50 uppercase tracking-[0.3em]">
-              {"// IDENTITY_PROFILE"}
+              {"// Computer Vision / Software Engineer"}
             </h2>
             <AnimatedName />
           </div>
 
-          {/* Bio restored with inline span */}
-          <p className="text-lg text-foreground/80 max-w-md leading-relaxed">
-            Software Engineer specializing in building{' '}
-            <span className="font-bold underline decoration-wavy">distorted digital experiences</span>
-            {' '}and high-performance systems. I bridge the gap between raw data and human interaction.
-          </p>
+          <div className="max-w-md space-y-4">
+            <p className="text-lg text-foreground/80 leading-relaxed">
+              Specializing in the intersection of{' '}
+              <span className="font-bold">Spatial Intelligence</span> and{' '}
+              <span className="font-bold">Scalable Engineering.</span>
+            </p>
+            <ul className="space-y-3 text-sm text-foreground/70 leading-relaxed">
+              <li className="flex gap-3">
+                <span className="text-foreground/30 select-none mt-0.5">▸</span>
+                <span>
+                  <span className="font-bold text-foreground">3D Computer Vision</span>
+                  {' — '}Expertise in 3D Reconstruction, Image Processing, and spatial data.
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-foreground/30 select-none mt-0.5">▸</span>
+                <span>
+                  <span className="font-bold text-foreground">Edge &amp; On-Device ML</span>
+                  {' — '}Optimizing high-performance AI models for local execution.
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-foreground/30 select-none mt-0.5">▸</span>
+                <span>
+                  <span className="font-bold text-foreground">Full-Stack &amp; Cloud</span>
+                  {' — '}Architecting end-to-end AI applications on modern cloud infrastructure.
+                </span>
+              </li>
+            </ul>
+          </div>
 
-          <div className="flex gap-4">
-            <a
-              href="/assets/docs/resume.pdf"
-              download="Joshua_Soteras_Resume.pdf"
-              className="px-6 py-3 bg-foreground text-background font-bold text-sm tracking-widest hover:scale-105 transition-transform active:scale-95 inline-block"
-            >
-              DOWNLOAD RESUME
-            </a>
-            <div className="flex items-center gap-4 px-4">
-              <a href="https://github.com/Joshua-Soteras" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-                <GitBranch className="w-5 h-5 hover:text-foreground/60" />
+          <div className="flex gap-4 items-center">
+            <GlitchBorder>
+              <a
+                href="/assets/docs/resume.pdf"
+                download="Joshua_Soteras_Resume.pdf"
+                className="px-6 py-3 bg-foreground text-background font-bold text-sm tracking-widest hover:scale-105 transition-transform active:scale-95 inline-block"
+              >
+                DOWNLOAD RESUME
               </a>
-              <a href="https://www.linkedin.com/in/joshua-soteras/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
-                <Linkedin className="w-5 h-5 hover:text-foreground/60" />
-              </a>
+            </GlitchBorder>
+            <div className="flex items-center gap-6 px-4">
+              <GlitchBorder size="sm">
+                <a href="https://github.com/Joshua-Soteras" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="block p-1">
+                  <GitBranch className="w-5 h-5" />
+                </a>
+              </GlitchBorder>
+              <GlitchBorder size="sm">
+                <a href="https://www.linkedin.com/in/joshua-soteras/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="block p-1">
+                  <Linkedin className="w-5 h-5" />
+                </a>
+              </GlitchBorder>
             </div>
           </div>
         </motion.div>
@@ -262,22 +229,24 @@ export default function Portfolio() {
           className="relative max-w-md mx-auto"
         >
           <div className="relative border-2 border-foreground p-2 group">
-            {/* aspect-ratio: 1/1 creates a square without layout-shift hacks */}
-            <div style={{ position: 'relative', aspectRatio: '1 / 1', overflow: 'hidden' }}>
+            {/* aspect-ratio on the img itself — simplest, no absolute positioning needed */}
+            <div style={{ overflow: 'hidden', position: 'relative' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/assets/images/profile.png"
                 alt="Joshua Soteras"
                 style={{
-                  position: 'absolute', top: 0, left: 0,
-                  width: '100%', height: '100%',
-                  objectFit: 'cover', objectPosition: 'top',
+                  display: 'block',
+                  width: '100%',
+                  aspectRatio: '1 / 1',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
                   filter: 'grayscale(100%) contrast(1.1) brightness(0.9)',
                   transition: 'transform 700ms',
                 }}
                 className="group-hover:scale-110"
               />
-              {/* Glitch colour overlays — no animate-glitch here to avoid GPU compositing conflicts */}
+              {/* Glitch colour overlays */}
               <div className="absolute inset-0 bg-red-500/10 mix-blend-screen opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="absolute inset-0 bg-cyan-500/10 mix-blend-screen opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="absolute inset-0 opacity-10 pointer-events-none bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.3)_2px,rgba(0,0,0,0.3)_4px)]" />
@@ -307,7 +276,9 @@ export default function Portfolio() {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {projects.map((p, i) => (
-            <ProjectCard key={i} {...p} index={i} />
+            <GlitchBorder key={i} size="sm" className="block">
+              <ProjectCard {...p} index={i} />
+            </GlitchBorder>
           ))}
         </div>
       </section>

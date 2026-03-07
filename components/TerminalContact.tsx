@@ -31,10 +31,11 @@ export default function TerminalContact() {
       setHistory((prev) => [
         ...prev,
         'Available commands:',
-        '  - email: Send a message via email',
-        '  - github: View my GitHub profile',
-        '  - clear: Clear the terminal screen',
-        '  - status: Check system status',
+        '  - email    Send a message via email',
+        '  - github   View my GitHub profile',
+        '  - ls       List projects',
+        '  - status   Check system status',
+        '  - clear    Clear the terminal',
       ]);
     } else if (cmd === 'clear') {
       setHistory([]);
@@ -44,8 +45,27 @@ export default function TerminalContact() {
       setHistory((prev) => [...prev, 'Redirecting to mail client...', 'Opening: mailto:soterasjoshua@gmail.com']);
       window.location.href = 'mailto:soterasjoshua@gmail.com';
     } else if (cmd === 'github') {
-      setHistory((prev) => [...prev, 'Opening GitHub...']);
-      window.open('https://github.com', '_blank');
+      setHistory((prev) => [...prev, 'Opening GitHub profile...', '→ https://github.com/Joshua-Soteras']);
+      window.open('https://github.com/Joshua-Soteras', '_blank');
+    } else if (cmd === 'ls') {
+      setHistory((prev) => [
+        ...prev,
+        'VISIO_MEMORIA',
+        'END-TO-END_DIFFERENTIABLE_3D_RECONSTRUCTION',
+        'AGENT-BAY',
+        'CONSTELLATION_TRACKER',
+        'SIGHT',
+        'CIBI  [ENCRYPTED]',
+      ]);
+    } else if (cmd === 'ffxv') {
+      const isActive = document.documentElement.hasAttribute('data-theme');
+      if (isActive) {
+        document.documentElement.removeAttribute('data-theme');
+        setHistory((prev) => [...prev, '> THEME REVERTED']);
+      } else {
+        document.documentElement.setAttribute('data-theme', 'ffxv');
+        setHistory((prev) => [...prev, '> ACCESSING RESTRICTED PARTITION...', '> THEME OVERRIDE: FFXV_PROTOCOL ENGAGED']);
+      }
     } else {
       setHistory((prev) => [...prev, `Command not found: ${cmd}. Type "help" for assistance.`]);
     }

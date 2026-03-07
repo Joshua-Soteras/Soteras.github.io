@@ -2,7 +2,6 @@
 
 import { useTheme } from 'next-themes';
 import { Sun, Moon, Terminal } from 'lucide-react';
-import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import GlitchBorder from './GlitchBorder';
 

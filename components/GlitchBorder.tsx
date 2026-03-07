@@ -11,9 +11,10 @@ interface GlitchBorderProps {
   children: React.ReactNode;
   className?: string;
   size?: keyof typeof CORNER_SIZES;
+  idlePulse?: boolean;
 }
 
-export default function GlitchBorder({ children, className = '', size = 'md' }: GlitchBorderProps) {
+export default function GlitchBorder({ children, className = '', size = 'md', idlePulse = false }: GlitchBorderProps) {
   const [hovered, setHovered] = useState(false);
   const [clicking, setClicking] = useState(false);
 
@@ -25,12 +26,12 @@ export default function GlitchBorder({ children, className = '', size = 'md' }: 
 
   const s = CORNER_SIZES[size];
 
-  // Click takes priority over hover; idle = invisible
+  // Click > hover > idle
   const cornerAnim = clicking
     ? 'animate-corner-spin'
     : hovered
-    ? 'animate-border-flicker'
-    : 'opacity-0';
+    ? (idlePulse ? 'animate-border-flicker-slow' : 'animate-border-flicker')
+    : (idlePulse ? 'animate-icon-idle' : 'opacity-0');
 
   return (
     <div

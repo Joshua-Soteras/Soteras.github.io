@@ -1,8 +1,14 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { ExternalLink, GitBranch, Linkedin } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ExternalLink, Linkedin, Mail } from 'lucide-react';
+
+const GitHubIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12" />
+  </svg>
+);
+import { useEffect, useRef, useState } from 'react';
 import GlitchReveal from './GlitchReveal';
 import GlitchBorder from './GlitchBorder';
 
@@ -19,6 +25,21 @@ const FRAME_MS        = 40;   // ms per scramble frame (~400ms total)
 
 const scramble = (s: string) =>
   s.split('').map(c => (c === ' ' ? ' ' : GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)])).join('');
+
+function useScramble(target: string, active: boolean) {
+  const [text, setText] = useState(target);
+  useEffect(() => {
+    if (!active) { setText(target); return; }
+    let frame = 0;
+    const id = setInterval(() => {
+      frame++;
+      if (frame >= SCRAMBLE_FRAMES) { clearInterval(id); setText(target); }
+      else setText(scramble(target));
+    }, FRAME_MS);
+    return () => clearInterval(id);
+  }, [active, target]);
+  return text;
+}
 
 // ─── AnimatedName ─────────────────────────────────────────────────────────────
 function AnimatedName() {
@@ -70,10 +91,49 @@ function AnimatedName() {
 }
 
 // ─── ProjectCard ──────────────────────────────────────────────────────────────
+const OPEN_LINK_TARGET = 'OPEN_LINK';
+
 function ProjectCard({ title, desc, tags, index, image, href }: {
   title: string; desc: string; tags: string[]; index: number;
   image?: string; href?: string;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [linkText, setLinkText] = useState<string>('');
+  const [tapped, setTapped] = useState(false);
+  const wasTouchRef = useRef(false);
+  const aRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (!href || !isHovered) {
+      setLinkText('');
+      return;
+    }
+    let frame = 0;
+    const id = setInterval(() => {
+      frame++;
+      if (frame >= SCRAMBLE_FRAMES) {
+        clearInterval(id);
+        setLinkText(OPEN_LINK_TARGET);
+      } else {
+        setLinkText(scramble(OPEN_LINK_TARGET));
+      }
+    }, FRAME_MS);
+    return () => clearInterval(id);
+  }, [isHovered, href]);
+
+  // Reset tap-hover state when user touches outside the card
+  useEffect(() => {
+    if (!tapped) return;
+    const reset = (e: TouchEvent) => {
+      if (aRef.current && !aRef.current.contains(e.target as Node)) {
+        setTapped(false);
+        setIsHovered(false);
+      }
+    };
+    document.addEventListener('touchstart', reset);
+    return () => document.removeEventListener('touchstart', reset);
+  }, [tapped]);
+
   const card = (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -81,6 +141,8 @@ function ProjectCard({ title, desc, tags, index, image, href }: {
       transition={{ delay: index * 0.1 }}
       viewport={{ once: true }}
       className="group relative border border-foreground/10 p-6 hover:border-foreground/40 transition-all cursor-pointer overflow-hidden h-full"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity bg-[repeating-linear-gradient(90deg,rgba(255,0,0,0.03)_0px,rgba(255,0,0,0.03)_1px,transparent_1px,transparent_4px)] mix-blend-overlay" />
 
@@ -112,8 +174,15 @@ function ProjectCard({ title, desc, tags, index, image, href }: {
         </div>
         {/* Decrypt / Encrypt bar */}
         <div className="space-y-1 pt-1">
-          <div className={`text-[8px] font-mono tracking-widest ${href ? 'text-foreground/30' : 'text-foreground/25'}`}>
-            {href ? 'DECRYPTED' : 'ENCRYPTED'}
+          <div className="flex justify-between items-center">
+            <div className={`text-[8px] font-mono tracking-widest ${href ? 'text-foreground/30' : 'text-foreground/25'}`}>
+              {href ? 'DECRYPTED' : 'ENCRYPTED'}
+            </div>
+            {linkText && (
+              <div className="text-[10px] font-mono tracking-widest font-bold text-foreground glitch-text">
+                {linkText}
+              </div>
+            )}
           </div>
           <div className="h-px bg-foreground/10 relative overflow-hidden">
             {href
@@ -127,7 +196,30 @@ function ProjectCard({ title, desc, tags, index, image, href }: {
   );
 
   if (href) {
-    return <a href={href} target="_blank" rel="noopener noreferrer" className="block h-full">{card}</a>;
+    return (
+      <a
+        ref={aRef}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block h-full"
+        onTouchStart={() => { wasTouchRef.current = true; }}
+        onClick={(e) => {
+          if (wasTouchRef.current) {
+            wasTouchRef.current = false;
+            if (!tapped) {
+              e.preventDefault();
+              setIsHovered(true);
+              setTapped(true);
+            } else {
+              setTapped(false);
+            }
+          }
+        }}
+      >
+        {card}
+      </a>
+    );
   }
   return card;
 }
@@ -197,6 +289,51 @@ function VictusCard({ index }: { index: number }) {
   );
 }
 
+// ─── ExperienceRow ────────────────────────────────────────────────────────────
+function ExperienceRow({ exp, i, hoveredExp, setHoveredExp }: {
+  exp: { company: string; role: string; location: string; period: string; bullets: string[] };
+  i: number;
+  hoveredExp: number | null;
+  setHoveredExp: (i: number | null) => void;
+}) {
+  const isActive = hoveredExp === i;
+  const companyText = useScramble(exp.company, isActive);
+  const roleText    = useScramble(exp.role,    isActive);
+
+  return (
+    <div
+      onMouseEnter={() => setHoveredExp(i)}
+      onMouseLeave={() => setHoveredExp(null)}
+      className={`group relative pl-8 border-l transition-all duration-300 ${
+        isActive
+          ? 'exp-active'
+          : hoveredExp !== null
+            ? 'exp-dimmed border-foreground/20'
+            : 'border-foreground/20'
+      }`}
+      style={{ opacity: hoveredExp !== null && !isActive ? 0.4 : 1 }}
+    >
+      <div className="absolute -left-[5px] top-0 w-[9px] h-[9px] bg-foreground rounded-full group-hover:animate-ping" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
+        <h4 className="text-xl font-bold tracking-tight">{companyText}</h4>
+        <span className="text-xs font-mono bg-foreground/5 px-2 py-1">{exp.period}</span>
+      </div>
+      <p className="text-sm font-bold text-foreground/60 mb-4">
+        {roleText}
+        <span className="font-normal text-foreground/40"> · {exp.location}</span>
+      </p>
+      <ul className="space-y-2">
+        {exp.bullets.map((b, j) => (
+          <li key={j} className="flex gap-3 text-sm text-foreground/70 leading-relaxed">
+            <span className="text-foreground/30 select-none mt-0.5 shrink-0">▸</span>
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 // ─── Portfolio ────────────────────────────────────────────────────────────────
 export default function Portfolio() {
   const projects = [
@@ -236,6 +373,45 @@ export default function Portfolio() {
     },
   ];
 
+  const [hoveredExp, setHoveredExp] = useState<number | null>(null);
+  const [photoGlitch, setPhotoGlitch] = useState(false);
+  const [detLabel, setDetLabel] = useState('ENGINEER_DETECTED');
+  const [detConf, setDetConf]   = useState('0.97');
+  const [detFrame, setDetFrame] = useState(1337);
+
+  useEffect(() => {
+    let outerTimer: ReturnType<typeof setTimeout>;
+    let innerTimer: ReturnType<typeof setTimeout>;
+    const burst = () => {
+      setPhotoGlitch(true);
+      innerTimer = setTimeout(() => {
+        setPhotoGlitch(false);
+        setDetFrame(prev => prev + Math.floor(Math.random() * 30) + 5);
+        outerTimer = setTimeout(burst, 3000 + Math.random() * 5000);
+      }, 500);
+    };
+    outerTimer = setTimeout(burst, 2000 + Math.random() * 3000);
+    return () => { clearTimeout(outerTimer); clearTimeout(innerTimer); };
+  }, []);
+
+  // Scramble detection overlay labels during photo glitch burst
+  useEffect(() => {
+    if (!photoGlitch) return;
+    let frame = 0;
+    const id = setInterval(() => {
+      frame++;
+      if (frame >= SCRAMBLE_FRAMES) {
+        clearInterval(id);
+        setDetLabel('ENGINEER_DETECTED');
+        setDetConf('0.97');
+      } else {
+        setDetLabel(scramble('ENGINEER_DETECTED'));
+        setDetConf('0.' + String(Math.floor(Math.random() * 99)).padStart(2, '0'));
+      }
+    }, FRAME_MS);
+    return () => clearInterval(id);
+  }, [photoGlitch]);
+
   const experiences = [
     {
       company: "LEIDOS_QTC_MGMT",
@@ -257,6 +433,15 @@ export default function Portfolio() {
         "Launched a cross-platform React Native email client with a swipe-card UI and on-device LLMs for summarize/categorize/smart-reply; shipped to 100+ TestFlight users.",
         "Achieved 3x on-device inference speed by embedding ExecuTorch and tuning model/memory trade-offs, enabling minimal latency for real-time AI-powered features.",
         "Implemented OAuth 2.0 + JWT with secure keystore token storage for robust auth/session management.",
+      ],
+    },
+    {
+      company: "CSULA",
+      role: "Computer Science Teaching Associate",
+      location: "Los Angeles, CA",
+      period: "AUG 2025 — PRESENT",
+      bullets: [
+        "Mentored 60+ students in Data Structures, Algorithms (DSA), and OOP (Java/C++/Python), driving a 15% increase in average test scores through targeted technical instruction and weekly lab facilitation.",
       ],
     },
   ];
@@ -324,12 +509,17 @@ export default function Portfolio() {
             <div className="flex items-center gap-6 px-4">
               <GlitchBorder size="sm">
                 <a href="https://github.com/Joshua-Soteras" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="block p-1">
-                  <GitBranch className="w-5 h-5" />
+                  <GitHubIcon className="w-5 h-5 icon-glitch" />
                 </a>
               </GlitchBorder>
               <GlitchBorder size="sm">
                 <a href="https://www.linkedin.com/in/joshua-soteras/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="block p-1">
-                  <Linkedin className="w-5 h-5" />
+                  <Linkedin className="w-5 h-5 icon-glitch" />
+                </a>
+              </GlitchBorder>
+              <GlitchBorder size="sm">
+                <a href="mailto:soterasjoshua@gmail.com" aria-label="Email" className="block p-1">
+                  <Mail className="w-5 h-5 icon-glitch" />
                 </a>
               </GlitchBorder>
             </div>
@@ -344,21 +534,50 @@ export default function Portfolio() {
         >
           <div className="relative border-2 border-foreground p-2 group">
             {/* aspect-ratio on the img itself — simplest, no absolute positioning needed */}
-            <div style={{ overflow: 'hidden', position: 'relative' }}>
+            <div style={{ overflow: 'hidden', position: 'relative' }} className={photoGlitch ? 'photo-glitching' : ''}>
+              {/* Main image wrapped for jitter animation */}
+              <div className="photo-slice-wrap">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/assets/images/profile.png"
+                  alt="Joshua Soteras"
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    aspectRatio: '1 / 1',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                    filter: 'grayscale(100%) contrast(1.1) brightness(0.9)',
+                    transition: 'transform 700ms',
+                  }}
+                  className="group-hover:scale-110"
+                />
+              </div>
+              {/* Ghost image — red channel (chromatic aberration) */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/assets/images/profile.png"
-                alt="Joshua Soteras"
+                alt=""
+                aria-hidden="true"
+                className="chroma-r absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none opacity-0"
                 style={{
-                  display: 'block',
-                  width: '100%',
                   aspectRatio: '1 / 1',
-                  objectFit: 'cover',
-                  objectPosition: 'center',
-                  filter: 'grayscale(100%) contrast(1.1) brightness(0.9)',
-                  transition: 'transform 700ms',
+                  filter: 'grayscale(100%) contrast(1.2) brightness(0.9) sepia(1) hue-rotate(120deg) saturate(6)',
+                  mixBlendMode: 'screen',
                 }}
-                className="group-hover:scale-110"
+              />
+              {/* Ghost image — cyan channel (chromatic aberration) */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/assets/images/profile.png"
+                alt=""
+                aria-hidden="true"
+                className="chroma-c absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none opacity-0"
+                style={{
+                  aspectRatio: '1 / 1',
+                  filter: 'grayscale(100%) contrast(1.2) brightness(0.9) sepia(1) hue-rotate(245deg) saturate(6)',
+                  mixBlendMode: 'screen',
+                }}
               />
               {/* Glitch colour overlays */}
               <div className="absolute inset-0 bg-red-500/10 mix-blend-screen opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -366,6 +585,39 @@ export default function Portfolio() {
               <div className="absolute inset-0 opacity-10 pointer-events-none bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.3)_2px,rgba(0,0,0,0.3)_4px)]" />
               {/* Scan line */}
               <div className="animate-scan-line absolute inset-x-0 h-px bg-foreground/50 pointer-events-none" />
+
+              {/* ── CV Detection Overlay ─────────────────────────────────── */}
+              <div className="absolute inset-0 pointer-events-none z-20 flex flex-col justify-between p-2 font-mono select-none">
+                {/* Top row: label + status */}
+                <div className="flex items-start justify-between">
+                  <div className="space-y-0.5">
+                    <div className="text-[8px] font-bold text-[#00ff88] tracking-widest uppercase leading-none">
+                      {detLabel}
+                    </div>
+                    <div className="text-[7px] font-bold text-[#00ff88]/80 tracking-wider">
+                      CONF: {detConf}
+                    </div>
+                  </div>
+                  <div className="text-[7px] font-bold text-[#00ff88]/60 text-right space-y-0.5">
+                    <div className="flex items-center gap-1 justify-end">
+                      <span className="w-1 h-1 rounded-full bg-[#00ff88]/70 animate-pulse inline-block" />
+                      <span>TRACKING</span>
+                    </div>
+                    <div>FPS: 30.0</div>
+                  </div>
+                </div>
+                {/* Bottom row: class, id, bbox, frame */}
+                <div className="text-[7px] font-bold text-[#00ff88]/70 space-y-0.5">
+                  <div className="flex justify-between">
+                    <span>CLASS: ENGINEER</span>
+                    <span>ID: #0042</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>BBOX:[24,18,488,506]</span>
+                    <span>F:{String(detFrame).padStart(6, '0')}</span>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-foreground" />
             <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-foreground" />
@@ -418,25 +670,8 @@ export default function Portfolio() {
                 initial={{ opacity: 0, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                className="group relative pl-8 border-l border-foreground/20"
               >
-                <div className="absolute -left-[5px] top-0 w-[9px] h-[9px] bg-foreground rounded-full group-hover:animate-ping" />
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
-                  <h4 className="text-xl font-bold tracking-tight">{exp.company}</h4>
-                  <span className="text-xs font-mono bg-foreground/5 px-2 py-1">{exp.period}</span>
-                </div>
-                <p className="text-sm font-bold text-foreground/60 mb-4">
-                  {exp.role}
-                  <span className="font-normal text-foreground/40"> · {exp.location}</span>
-                </p>
-                <ul className="space-y-2">
-                  {exp.bullets.map((b, j) => (
-                    <li key={j} className="flex gap-3 text-sm text-foreground/70 leading-relaxed">
-                      <span className="text-foreground/30 select-none mt-0.5 shrink-0">▸</span>
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
+                <ExperienceRow exp={exp} i={i} hoveredExp={hoveredExp} setHoveredExp={setHoveredExp} />
               </motion.div>
             ))}
           </div>
